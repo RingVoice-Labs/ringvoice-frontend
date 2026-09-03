@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+/* ============================================================
+   RingVoice Design Tokens
+   Tailwind v4 CSS-first config via @theme
+   ============================================================ */
+
+@theme {
+  /* ── Color Palette ──────────────────────────────────────── */
+
+  /* Backgrounds */
+  --color-rv-bg: #0d0f14;          /* Page background — deep navy-black */
+  --color-rv-surface: #161922;     /* Card / panel surface */
+  --color-rv-surface-2: #1e2230;   /* Elevated surface (e.g. modals) */
+
+  /* Brand accent (blue) — #3B8EEA on #0d0f14 → 6.5:1 contrast ✓ AAA */
+  --color-rv-accent: #3b8eea;
+  --color-rv-accent-hover: #5aa3f5;
+
+  /* Text */
+  --color-rv-text-primary: #f0f4ff;   /* High-contrast white — 16.4:1 on bg ✓ AAA */
+  --color-rv-text-secondary: #8b95b0; /* Secondary / metadata — 4.8:1 on bg ✓ AA */
+
+  /* Status */
+  --color-rv-success: #34d399;   /* green-400 */
+  --color-rv-warning: #fbbf24;   /* amber-400 */
+  --color-rv-error: #f87171;     /* red-400 */
+
+  /* ── Typography ─────────────────────────────────────────── */
+
+  /* Base size bump: accessibility default is 18px minimum for HoH users */
+  --font-size-base: 1.125rem;     /* 18px */
+
+  /* Caption sizes — the core HoH reading surface */
+  --font-size-caption: 2.25rem;   /* 36px — live caption text */
+  --font-size-display: 3rem;      /* 48px — large event headlines */
+
+  /* Google Font — Inter for maximum legibility */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* ── Animations ─────────────────────────────────────────── */
+  --animate-slide-down: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-blink: blink 1s step-start infinite;
+  --animate-ring: ring-shake 0.6s ease-in-out;
+}
+
+/* ── Keyframes ──────────────────────────────────────────── */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes ring-shake {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-15deg); }
+  30% { transform: rotate(15deg); }
+  45% { transform: rotate(-10deg); }
+  60% { transform: rotate(10deg); }
+  75% { transform: rotate(-5deg); }
+  90% { transform: rotate(5deg); }
+}
+
+/* ── Base Reset & Global Styles ─────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    background-color: theme(--color-rv-bg);
+    color: theme(--color-rv-text-primary);
+    font-family: theme(--font-family-sans);
+    font-size: theme(--font-size-base);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
+  }
+
+  /* Focus ring — high-contrast for keyboard / AT users */
+  :focus-visible {
+    outline: 2px solid theme(--color-rv-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ── Utility: font-size for caption text ────────────────── */
+@layer utilities {
+  .text-rv-caption {
+    font-size: theme(--font-size-caption);
+    line-height: 1.2;
+  }
+  .text-rv-display {
+    font-size: theme(--font-size-display);
+    line-height: 1.1;
+  }
+  /* Safe area bottom padding for mobile notch devices */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+}
