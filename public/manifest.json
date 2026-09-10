@@ -1,0 +1,19 @@
+﻿{
+  "name": "RingVoice — Live Doorbell Captions",
+  "short_name": "RingVoice",
+  "description": "Live captions for Ring doorbell visitors. Built for deaf and hard-of-hearing residents.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0f14",
+  "theme_color": "#3b8eea",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "accessibility"]
+}

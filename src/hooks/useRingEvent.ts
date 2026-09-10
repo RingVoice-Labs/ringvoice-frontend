@@ -45,10 +45,7 @@ export function useRingEvent(): UseRingEventReturn {
   }, []);
 
   const simulate = useCallback(() => {
-    apiService.simulateRingEvent((evt) => {
-      setEvent(evt);
-      setIsActive(true);
-    });
+    apiService.simulateRingEvent();
   }, []);
 
   return { event, isActive, status, dismiss, simulate };

@@ -38,32 +38,33 @@ let _useMotion = false;
  * @param callback  Called with each RingEvent as it arrives.
  * @returns         Unsubscribe function — call this on component unmount.
  */
+// Registry of subscribers — fires whenever a ring event is emitted
+const _ringSubscribers = new Set<(event: RingEvent) => void>();
+
 export function subscribeMockRingEvent(
   callback: (event: RingEvent) => void
 ): () => void {
-  const event: RingEvent = {
-    ...(_useMotion ? MOCK_MOTION_EVENT : MOCK_EVENT),
-    id: `evt-mock-${Date.now()}`,
-    timestamp: new Date().toISOString(),
-  };
+  _ringSubscribers.add(callback);
+  return () => _ringSubscribers.delete(callback);
+}
 
-  const timerId = setTimeout(() => {
-    callback(event);
-  }, 800); // slight delay to let the UI mount first
-
-  return () => clearTimeout(timerId);
+/** Internal: fire an event to all current subscribers. */
+function _emitRingEvent(event: RingEvent) {
+  _ringSubscribers.forEach((cb) => cb(event));
 }
 
 /**
- * Fire a fresh ring event on demand (for the "Simulate Ring" dev button).
+ * Fire a fresh ring event on demand (for the demo / simulate button).
  * Alternates between button_press and motion_detected each call.
  */
-export function simulateRingEvent(callback: (event: RingEvent) => void): void {
+export function simulateRingEvent(callback?: (event: RingEvent) => void): void {
   _useMotion = !_useMotion;
   const base = _useMotion ? MOCK_MOTION_EVENT : MOCK_EVENT;
-  callback({
+  const event: RingEvent = {
     ...base,
     id: `evt-mock-${Date.now()}`,
     timestamp: new Date().toISOString(),
-  });
+  };
+  _emitRingEvent(event);
+  callback?.(event);
 }

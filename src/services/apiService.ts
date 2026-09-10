@@ -39,11 +39,11 @@ export const apiService = {
     }
   },
 
-  simulateRingEvent(callback: (event: RingEvent) => void): void {
+  simulateRingEvent(): void {
     if (USE_MOCK_DATA) {
-      simulateRingEvent(callback);
+      simulateRingEvent();
     } else {
-      console.warn("simulateRingEvent not available in real backend mode");
+      console.warn('simulateRingEvent not available in real backend mode');
     }
   },
 
