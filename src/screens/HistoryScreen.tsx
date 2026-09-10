@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { VisitCard } from '../components/VisitCard';
-import { MOCK_VISIT_HISTORY } from '../mock/mockVisitHistory';
-import type { RingEventType } from '../types/api';
+import { apiService } from '../services/apiService';
+import type { RingEventType, VisitLogEntry } from '../types/api';
 
 type FilterTab = 'all' | RingEventType;
 
@@ -17,16 +17,42 @@ interface HistoryScreenProps {
 
 export function HistoryScreen({ onBack }: HistoryScreenProps) {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [history, setHistory] = useState<VisitLogEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setIsLoading(true);
+    setError(null);
+
+    apiService.fetchVisitHistory()
+      .then(data => {
+        if (mounted) {
+          setHistory(data);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        if (mounted) {
+          console.error(err);
+          setError('Failed to load visit history.');
+          setIsLoading(false);
+        }
+      });
+
+    return () => { mounted = false; };
+  }, []);
 
   const filtered = useMemo(() => {
-    const sorted = [...MOCK_VISIT_HISTORY].sort(
+    const sorted = [...history].sort(
       (a, b) =>
         new Date(b.event.timestamp).getTime() -
         new Date(a.event.timestamp).getTime()
     );
     if (activeTab === 'all') return sorted;
     return sorted.filter((v) => v.event.eventType === activeTab);
-  }, [activeTab]);
+  }, [activeTab, history]);
 
   return (
     <div className="flex flex-col h-screen bg-rv-bg text-rv-text-primary">
@@ -49,7 +75,7 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
         <div>
           <h1 className="text-white font-bold text-xl">Visit History</h1>
           <p className="text-rv-text-secondary text-sm">
-            {MOCK_VISIT_HISTORY.length} visits recorded
+            {history.length} visits recorded
           </p>
         </div>
       </header>
@@ -87,8 +113,24 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
       </div>
 
       {/* ── Visit List ──────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto px-5 pb-8">
-        {filtered.length === 0 ? (
+      <main className="flex-1 overflow-y-auto px-5 pb-8" aria-live="polite">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4 py-16 text-center">
+            <span className="animate-spin text-3xl" aria-hidden="true">⏳</span>
+            <p className="text-rv-text-secondary text-lg font-medium">Loading history...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full gap-4 py-16 text-center">
+            <span className="text-3xl" aria-hidden="true">⚠️</span>
+            <p className="text-red-400 text-lg font-medium">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-rv-surface rounded-lg text-sm hover:bg-white/10"
+            >
+              Retry
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-4 py-16 text-center">
             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
               <span className="text-3xl" aria-hidden="true">🔍</span>

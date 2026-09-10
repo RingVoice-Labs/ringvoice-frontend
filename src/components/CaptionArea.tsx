@@ -3,9 +3,10 @@ import type { CaptionChunk } from '../types/api';
 interface CaptionAreaProps {
   chunks: CaptionChunk[];
   isStreaming: boolean;
+  isFinished: boolean;
 }
 
-export function CaptionArea({ chunks, isStreaming }: CaptionAreaProps) {
+export function CaptionArea({ chunks, isStreaming, isFinished }: CaptionAreaProps) {
   const hasContent = chunks.length > 0;
 
   // Group chunks into sentences (split on isFinal boundaries)
@@ -105,6 +106,17 @@ export function CaptionArea({ chunks, isStreaming }: CaptionAreaProps) {
               aria-hidden="true"
             />
           </p>
+        )}
+
+        {/* Conversation Ended State */}
+        {isFinished && hasContent && (
+          <div className="mt-2 flex flex-col items-center justify-center opacity-80 animate-slide-down">
+            <div className="w-full h-px bg-white/10 mb-4"></div>
+            <p className="text-rv-text-secondary text-sm font-medium flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-rv-text-secondary/70"></span>
+              Conversation ended
+            </p>
+          </div>
         )}
       </div>
     </section>

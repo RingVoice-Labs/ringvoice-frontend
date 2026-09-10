@@ -1,13 +1,17 @@
-import type { VisitLogEntry } from '../types/api';
+import type { VisitLogEntry, ResidentResponse, CaptionChunk } from '../types/api';
 
 // ============================================================
-// Mock Visit History Seed Data
+// Mock Visit History State Management (Week 2 Database)
 // ============================================================
-// Covers: answered, unanswered, motion-only, wrong address,
-// and a multi-sentence transcript visit.
+// A simple pub/sub mock database so the UI can log notes and
+// new visits, and the history screen updates in real-time.
 // ============================================================
 
-export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
+type Listener = (history: VisitLogEntry[]) => void;
+const listeners = new Set<Listener>();
+
+// Initial seed data
+let historyState: VisitLogEntry[] = [
   // 1. Button press — resident replied "Leaving now"
   {
     id: 'visit-001',
@@ -41,7 +45,6 @@ export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
     },
     endedAt: '2026-09-03T14:05:35Z',
   },
-
   // 2. Button press — resident replied "Leave it at the door"
   {
     id: 'visit-002',
@@ -75,7 +78,6 @@ export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
     },
     endedAt: '2026-09-02T09:31:25Z',
   },
-
   // 3. Button press — no response logged (resident didn't react)
   {
     id: 'visit-003',
@@ -98,7 +100,6 @@ export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
     response: null,
     endedAt: '2026-09-01T18:47:55Z',
   },
-
   // 4. Motion detected — no captions (no one spoke)
   {
     id: 'visit-004',
@@ -113,7 +114,6 @@ export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
     response: null,
     endedAt: '2026-08-31T22:10:20Z',
   },
-
   // 5. Button press — resident replied "Wrong address"
   {
     id: 'visit-005',
@@ -140,52 +140,67 @@ export const MOCK_VISIT_HISTORY: VisitLogEntry[] = [
     },
     endedAt: '2026-08-30T11:22:15Z',
   },
-
-  // 6. Button press — longer transcript, "One moment please"
-  {
-    id: 'visit-006',
-    event: {
-      id: 'evt-006',
-      eventType: 'button_press',
-      timestamp: '2026-08-29T16:05:00Z',
-      deviceName: 'Front Door',
-      deviceId: 'device-ring-001',
-    },
-    captions: [
-      {
-        id: 'c-006-1',
-        text: 'Hello, good afternoon!',
-        timestamp: '2026-08-29T16:05:03Z',
-        isFinal: true,
-        visitId: 'visit-006',
-      },
-      {
-        id: 'c-006-2',
-        text: "I'm from the city utilities department.",
-        timestamp: '2026-08-29T16:05:06Z',
-        isFinal: true,
-        visitId: 'visit-006',
-      },
-      {
-        id: 'c-006-3',
-        text: "We need to check your water meter today if that's alright.",
-        timestamp: '2026-08-29T16:05:11Z',
-        isFinal: true,
-        visitId: 'visit-006',
-      },
-      {
-        id: 'c-006-4',
-        text: "It should only take a few minutes.",
-        timestamp: '2026-08-29T16:05:15Z',
-        isFinal: true,
-        visitId: 'visit-006',
-      },
-    ],
-    response: {
-      replyId: 'one_moment',
-      replyLabel: 'One moment please',
-      respondedAt: '2026-08-29T16:05:18Z',
-    },
-    endedAt: '2026-08-29T16:05:45Z',
-  },
 ];
+
+function notify() {
+  const current = [...historyState];
+  listeners.forEach((fn) => fn(current));
+}
+
+export function subscribeMockHistory(callback: Listener): () => void {
+  listeners.add(callback);
+  callback([...historyState]);
+  return () => {
+    listeners.delete(callback);
+  };
+}
+
+export function getMockHistory() {
+  return [...historyState];
+}
+
+export function addVisitToMockHistory(visit: VisitLogEntry) {
+  // Add to the front so it's most recent
+  historyState = [visit, ...historyState];
+  notify();
+}
+
+export function appendCaptionToMockVisit(visitId: string, chunk: CaptionChunk) {
+  historyState = historyState.map(visit => {
+    if (visit.id === visitId) {
+      return { ...visit, captions: [...visit.captions, chunk] };
+    }
+    return visit;
+  });
+  notify();
+}
+
+export function replaceCaptionsInMockVisit(visitId: string, chunks: CaptionChunk[]) {
+  historyState = historyState.map(visit => {
+    if (visit.id === visitId) {
+      return { ...visit, captions: chunks };
+    }
+    return visit;
+  });
+  notify();
+}
+
+export function logResponseToMockHistory(visitId: string, response: ResidentResponse) {
+  historyState = historyState.map(visit => {
+    if (visit.id === visitId) {
+      return { ...visit, response };
+    }
+    return visit;
+  });
+  notify();
+}
+
+export function endMockVisit(visitId: string) {
+  historyState = historyState.map(visit => {
+    if (visit.id === visitId) {
+      return { ...visit, endedAt: new Date().toISOString() };
+    }
+    return visit;
+  });
+  notify();
+}

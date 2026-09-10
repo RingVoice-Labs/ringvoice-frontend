@@ -48,9 +48,9 @@ export function EventBanner({ event, isActive, onDismiss }: EventBannerProps) {
         </span>
         <div className="min-w-0">
           <p className="text-white font-bold text-xl leading-tight truncate">
-            {isButtonPress ? 'Doorbell Pressed' : 'Motion Detected'}
+            {isButtonPress ? 'Someone is at the door' : 'Motion detected'}
           </p>
-          <p className="text-white/80 text-sm font-medium">
+          <p className="text-white/90 text-sm font-medium">
             {event.deviceName} &middot;{' '}
             {new Date(event.timestamp).toLocaleTimeString([], {
               hour: '2-digit',

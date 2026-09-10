@@ -1,19 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { RingEvent } from '../types/api';
-import {
-  subscribeMockRingEvent,
-  simulateRingEvent,
-} from '../mock/mockRingEvent';
+import { apiService } from '../services/apiService';
+import type { AppDataStatus } from '../services/apiService';
 
 // ============================================================
 // useRingEvent hook
 // ============================================================
 // Manages the active ring event state.
-//
-// SWAPPING IN THE REAL BACKEND (Week 3):
-//   In the useEffect, replace subscribeMockRingEvent() with
-//   your WebSocket/SSE message handler. The hook API and return
-//   shape stay exactly the same.
 // ============================================================
 
 interface UseRingEventReturn {
@@ -21,6 +14,8 @@ interface UseRingEventReturn {
   event: RingEvent | null;
   /** True while the event banner should be shown. */
   isActive: boolean;
+  /** Connection status for the event stream. */
+  status: AppDataStatus;
   /** Dismiss the current event (closes banner, keeps event in state). */
   dismiss: () => void;
   /** Dev helper: fire a new simulated ring event manually. */
@@ -30,13 +25,18 @@ interface UseRingEventReturn {
 export function useRingEvent(): UseRingEventReturn {
   const [event, setEvent] = useState<RingEvent | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const [status, setStatus] = useState<AppDataStatus>('idle');
 
   useEffect(() => {
-    // Auto-play: fires one mock event on mount
-    const unsubscribe = subscribeMockRingEvent((evt) => {
-      setEvent(evt);
-      setIsActive(true);
-    });
+    const unsubscribe = apiService.subscribeRingEvent(
+      (evt) => {
+        setEvent(evt);
+        setIsActive(true);
+      },
+      (newStatus) => {
+        setStatus(newStatus);
+      }
+    );
     return unsubscribe;
   }, []);
 
@@ -45,11 +45,11 @@ export function useRingEvent(): UseRingEventReturn {
   }, []);
 
   const simulate = useCallback(() => {
-    simulateRingEvent((evt) => {
+    apiService.simulateRingEvent((evt) => {
       setEvent(evt);
       setIsActive(true);
     });
   }, []);
 
-  return { event, isActive, dismiss, simulate };
+  return { event, isActive, status, dismiss, simulate };
 }

@@ -68,7 +68,8 @@ export type QuickReplyId =
   | 'leaving_now'
   | 'leave_at_door'
   | 'one_moment'
-  | 'wrong_address';
+  | 'wrong_address'
+  | 'custom';
 
 /** Display labels for each quick reply. */
 export const QUICK_REPLY_LABELS: Record<QuickReplyId, string> = {
@@ -76,6 +77,7 @@ export const QUICK_REPLY_LABELS: Record<QuickReplyId, string> = {
   leave_at_door: 'Leave it at the door',
   one_moment: 'One moment please',
   wrong_address: 'Wrong address',
+  custom: 'Custom Note',
 };
 
 /**
