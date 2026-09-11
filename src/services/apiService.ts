@@ -4,20 +4,32 @@ import { subscribeMockCaptionStream } from '../mock/mockCaptionStream';
 import { getMockHistory, logResponseToMockHistory } from '../mock/mockVisitHistory';
 import { wsClient } from './backendWs';
 
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== 'false';
+let isMockMode = import.meta.env.VITE_USE_MOCK_DATA !== 'false';
 const API_URL = 'https://api.ringvoice.example.com';
 const AUTH_TOKEN = 'mock-token';
 
 export type AppDataStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'disconnected';
 
 export const apiService = {
+  isMockMode(): boolean {
+    return isMockMode;
+  },
+
+  setMockMode(enable: boolean) {
+    isMockMode = enable;
+    wsClient.emitDevLog('system', 'mode:changed', { isMockMode });
+  },
+
   subscribeRingEvent(
     onEvent: (event: RingEvent) => void,
     onStatusChange?: (status: AppDataStatus) => void
   ): () => void {
-    if (USE_MOCK_DATA) {
+    if (isMockMode) {
       if (onStatusChange) onStatusChange('connected');
-      return subscribeMockRingEvent(onEvent);
+      return subscribeMockRingEvent((evt) => {
+        wsClient.emitDevLog('inbound', 'ring_event (mock)', evt);
+        onEvent(evt);
+      });
     } else {
       wsClient.connect();
       let statusCleanup = () => {};
@@ -34,16 +46,16 @@ export const apiService = {
       return () => {
         statusCleanup();
         msgCleanup();
-        // Option to disconnect, but might be shared with captions
       };
     }
   },
 
   simulateRingEvent(): void {
-    if (USE_MOCK_DATA) {
+    wsClient.emitDevLog('outbound', 'simulate_ring', { timestamp: new Date().toISOString() });
+    if (isMockMode) {
       simulateRingEvent();
     } else {
-      console.warn('simulateRingEvent not available in real backend mode');
+      console.warn('simulateRingEvent triggered in real mode');
     }
   },
 
@@ -53,9 +65,19 @@ export const apiService = {
     onDone: () => void,
     onStatusChange?: (status: AppDataStatus) => void
   ): () => void {
-    if (USE_MOCK_DATA) {
+    if (isMockMode) {
       if (onStatusChange) onStatusChange('connected');
-      return subscribeMockCaptionStream(visitId, onChunk, onDone);
+      return subscribeMockCaptionStream(
+        visitId,
+        (chunk) => {
+          wsClient.emitDevLog('inbound', 'caption_chunk (mock)', chunk);
+          onChunk(chunk);
+        },
+        () => {
+          wsClient.emitDevLog('inbound', 'session_end (mock)', { visitId, endedAt: new Date().toISOString() });
+          onDone();
+        }
+      );
     } else {
       wsClient.connect();
       let statusCleanup = () => {};
@@ -79,7 +101,8 @@ export const apiService = {
   },
 
   async submitResponse(visitId: string, response: ResidentResponse): Promise<void> {
-    if (USE_MOCK_DATA) {
+    wsClient.emitDevLog('outbound', `POST /visits/${visitId}/response`, response);
+    if (isMockMode) {
       logResponseToMockHistory(visitId, response);
       return Promise.resolve();
     } else {
@@ -98,8 +121,11 @@ export const apiService = {
   },
 
   async fetchVisitHistory(): Promise<VisitLogEntry[]> {
-    if (USE_MOCK_DATA) {
-      return Promise.resolve(getMockHistory());
+    wsClient.emitDevLog('outbound', 'GET /visits', { query: '?page=1&pageSize=20' });
+    if (isMockMode) {
+      const history = getMockHistory();
+      wsClient.emitDevLog('inbound', '200 OK (GET /visits)', { total: history.length });
+      return Promise.resolve(history);
     } else {
       const res = await fetch(`${API_URL}/visits`, {
         headers: {
@@ -110,6 +136,7 @@ export const apiService = {
         throw new Error(`Failed to fetch history: ${res.statusText}`);
       }
       const data = await res.json();
+      wsClient.emitDevLog('inbound', '200 OK (GET /visits)', data);
       return data.items;
     }
   }

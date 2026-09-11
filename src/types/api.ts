@@ -132,3 +132,18 @@ export type BackendMessage =
   | { type: 'caption_chunk'; payload: CaptionChunk }
   | { type: 'session_end'; payload: { visitId: string; endedAt: string } }
   | { type: 'error'; payload: { code: string; message: string } };
+
+// ------ UI Accessibility & Dev Inspection Types -------------------
+
+/** Font size setting for HoH caption accessibility. */
+export type CaptionFontSize = 'normal' | 'large' | 'xl';
+
+/** Dev Inspector Log entry for backend team testing. */
+export interface DevLogEntry {
+  id: string;
+  timestamp: string;
+  direction: 'inbound' | 'outbound' | 'system';
+  topic: string;
+  data: unknown;
+}
+
