@@ -1,8 +1,8 @@
 import type { BackendMessage, DevLogEntry } from '../types/api';
 
-let defaultWsUrl = 'wss://api.ringvoice.example.com/ws';
-const DEVICE_ID = 'dev-123';
-const AUTH_TOKEN = 'mock-token';
+let defaultWsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws';
+const DEVICE_ID = import.meta.env.VITE_DEVICE_ID || 'device-ring-001';
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN || 'mock-token';
 
 type MessageListener = (msg: BackendMessage) => void;
 type StatusListener = (status: 'connecting' | 'connected' | 'error' | 'disconnected') => void;
