@@ -95,15 +95,6 @@ VITE_USE_MOCK_DATA=false   # Set to false to use the real backend
 
 ---
 
-## 👥 Team
-
-| Role | Name |
-|---|---|
-| Frontend | RingVoice Labs |
-| Backend | *(teammate)* |
-
----
-
 ## 📄 License
 
 MIT — see [`LICENSE`](./LICENSE)

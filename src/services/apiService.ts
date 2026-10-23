@@ -5,8 +5,8 @@ import { getMockHistory, logResponseToMockHistory } from '../mock/mockVisitHisto
 import { wsClient } from './backendWs';
 
 let isMockMode = import.meta.env.VITE_USE_MOCK_DATA !== 'false';
-const API_URL = 'https://api.ringvoice.example.com';
-const AUTH_TOKEN = 'mock-token';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN || 'mock-token';
 
 export type AppDataStatus = 'idle' | 'connecting' | 'connected' | 'error' | 'disconnected';
 
@@ -55,7 +55,19 @@ export const apiService = {
     if (isMockMode) {
       simulateRingEvent();
     } else {
-      console.warn('simulateRingEvent triggered in real mode');
+      fetch(`${API_URL}/api/dev/simulate-ring`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AUTH_TOKEN}`
+        },
+        body: JSON.stringify({
+          deviceName: 'Front Porch Camera',
+          eventType: 'button_press'
+        })
+      }).catch((err) => {
+        console.error('Failed to trigger backend simulation:', err);
+      });
     }
   },
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { VisitLogEntry } from '../types/api';
+import { formatTranscript } from '../utils/captionUtils';
 
 interface VisitCardProps {
   visit: VisitLogEntry;
@@ -24,7 +25,7 @@ export function VisitCard({ visit }: VisitCardProps) {
   const { event, captions, response } = visit;
   const meta = EVENT_LABELS[event.eventType];
 
-  const fullTranscript = captions.map((c) => c.text).join('').trim();
+  const fullTranscript = formatTranscript(captions);
   const hasTranscript = fullTranscript.length > 0;
   const isLong = fullTranscript.length > 120;
   const displayText =

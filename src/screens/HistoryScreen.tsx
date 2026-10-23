@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { VisitCard } from '../components/VisitCard';
 import { apiService } from '../services/apiService';
 import type { RingEventType, VisitLogEntry } from '../types/api';
+import { formatTranscript } from '../utils/captionUtils';
 
 type FilterTab = 'all' | RingEventType;
 
@@ -59,7 +60,7 @@ export function HistoryScreen({ onBack }: HistoryScreenProps) {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((v) => {
-        const transcript = v.captions.map((c) => c.text).join(' ').toLowerCase();
+        const transcript = formatTranscript(v.captions).toLowerCase();
         const device = v.event.deviceName.toLowerCase();
         const responseLabel = v.response?.replyLabel.toLowerCase() || '';
         return transcript.includes(q) || device.includes(q) || responseLabel.includes(q);

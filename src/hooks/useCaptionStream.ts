@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { CaptionChunk } from '../types/api';
+import { formatTranscript } from '../utils/captionUtils';
 import { apiService } from '../services/apiService';
 import type { AppDataStatus } from '../services/apiService';
 
@@ -76,7 +77,7 @@ export function useCaptionStream(): UseCaptionStreamReturn {
     };
   }, []);
 
-  const fullText = chunks.map((c) => c.text).join('');
+  const fullText = formatTranscript(chunks);
 
   return { chunks, fullText, isStreaming, isFinished, status, startStream, reset };
 }

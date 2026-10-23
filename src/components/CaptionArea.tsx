@@ -1,4 +1,5 @@
 import type { CaptionChunk, CaptionFontSize } from '../types/api';
+import { appendChunkText } from '../utils/captionUtils';
 
 interface CaptionAreaProps {
   chunks: CaptionChunk[];
@@ -36,7 +37,7 @@ export function CaptionArea({
   const sentences: string[] = [];
   let current = '';
   for (const chunk of chunks) {
-    current += chunk.text;
+    current = appendChunkText(current, chunk.text);
     if (chunk.isFinal) {
       sentences.push(current.trim());
       current = '';
